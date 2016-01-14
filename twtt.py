@@ -3,29 +3,45 @@
 import NLPlib
 import sys
 import csv
+import re
+import HTMLParser
+
 # WARNING: Change this before submitting.
 INPUT_FILE = 'testdata.manual.2009.06.14.csv'
 
 def strip_html(tweet): # Step 1 of part 1.
      """ Remove all html tags and attributes.
      """
-     pass
+     mo = re.search(r"<[^>]+>" , tweet)
+     while mo:
+         tweet = tweet[:mo.start()] + tweet[mo.end():]
+	 mo = re.search(r"<[^>]+>" , tweet)
+     return tweet
 
 def html_char_to_ascii(tweet): # Step 2 of part 1.
+     """ Replace html char codes with their ascii equivalent.
      """
-     """
-     pass
+     h = HTMLParser.HTMLParser()
+     return h.unescape(tweet)
 
 
 def strip_urls(tweet): # Step 3 of part 1.
+     """ Remove urls.
      """
-     """
-     pass
+     mo = re.search("([Hh]ttps?|www)[^\s]*\s+", tweet)
+     while mo:
+         tweet = tweet[:mo.start()] + tweet[mo.end():]
+         mo = re.search("([Hh]ttps?|www)[^\s]*\s+", tweet)
+     return tweet
 
 def strip_twitter_chars(tweet): # Step 4 of part 1.
      """ Remove the @ and # chars.
      """
-     pass
+     mo = re.search(r"[#@]" , tweet)
+     while mo:
+         tweet = tweet[:mo.start()] + tweet[mo.end():]
+         mo = re.search(r"[#@]" , tweet)
+     return tweet
 
 def split_sentences(tweet): # Step 5 of part 1.
      """
@@ -36,9 +52,14 @@ def split_sentences(tweet): # Step 5 of part 1.
 
 
 def space_tokens(tweet): # Step 7 of part 1.
+     """ Seperate every token (including punctuation and clitics) by spaces.
      """
-     """
-     pass
+     mo = re.search(r"[.,:;?!]" , tweet)
+     while mo:
+         tweet = tweet[:mo.start()] + tweet[mo.end():]
+         mo = re.search(r"[#@]" , tweet)
+     return tweet
+     
 
 def tag_tokens(tokens): # Step 8 of part 1.
     """ Use the module provided (NLPlib).
