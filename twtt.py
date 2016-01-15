@@ -82,9 +82,18 @@ def split_sentences(tweet): # Step 5 of part 1.
      input:
         tweet - a string representing a tweet.
      ouput:
-        tweet - a string representing a tweet.
+        split_tweet - a string representing a tweet, where each
+                      distinct sentence is on it's own line.
      """
-     pass
+     split_tweet = ''
+     mo = re.search("[\.!?]", tweet)
+     i = 0
+     while mo:
+         split_tweet += tweet[i:mo.start() + 1] + '\n'
+         i = mo.start()
+         tweet = tweet[:mo.start()] + tweet[mo.end() + 1:]
+         mo = re.search("[\.!?]", tweet)
+     return split_tweet
 
 # Note: Step 6 just says that ellipsis and repeated punctuation (eg !!!) do NOT get split.
 
