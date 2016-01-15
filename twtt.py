@@ -116,19 +116,21 @@ def tag_tokens(tokens): # Step 8 of part 1.
     """
     pass
 
-def add_demarcation(tweet): # Step 9 of part 1.
+def add_demarcation(tweet, n): # Step 9 of part 1.
     """
     Return the input tweet prefixed with a demarcation (on a separate line)
     representing the numeric class of the tweet.
 
     input:
        tweet - a string representing a tweet.
+       n     - the numeric class of tweet.
     output:
        labeled_tweet - the input tweet prefixed with it's
-                       numeric class demarcation on a separate line.
+                       numeric class n demarcated on a separate line.
     """
-    pass
-
+    demarcation = '<A={}>\n'.format(n)
+    return demarcation + tweet
+      
 def normalize_tweet(tweet):
     """
     Return the input tweet in normalized form. That is: 
