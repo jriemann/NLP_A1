@@ -8,6 +8,10 @@ import HTMLParser
 
 # WARNING: Change this before submitting.
 INPUT_FILE = 'testdata.manual.2009.06.14.csv'
+ABBR_FILE = 'abbrev.english'
+
+with open(ABBR_FILE) as f:
+    ABBREVIATIONS = f.readlines()
 
 def strip_html(tweet): # Step 1 of part 1.
      """
@@ -23,6 +27,7 @@ def strip_html(tweet): # Step 1 of part 1.
      while mo:
          tweet = tweet[:mo.start()] + tweet[mo.end():]
 	 mo = re.search(r"<[^>]+>" , tweet)
+
      return tweet
 
 def html_char_to_ascii(tweet): # Step 2 of part 1.
@@ -36,6 +41,7 @@ def html_char_to_ascii(tweet): # Step 2 of part 1.
         tweet - a string representing a tweet.
      """
      h = HTMLParser.HTMLParser()
+
      return h.unescape(tweet)
 
 def strip_urls(tweet): # Step 3 of part 1.
@@ -56,6 +62,7 @@ def strip_urls(tweet): # Step 3 of part 1.
      while mo:
          tweet = tweet[:mo.start()] + tweet[mo.end():]
          mo = re.search("([Hh]ttps?|www)[^\s]*\s+", tweet)
+
      return tweet
 
 def strip_twitter_chars(tweet): # Step 4 of part 1.
@@ -72,6 +79,7 @@ def strip_twitter_chars(tweet): # Step 4 of part 1.
      while mo:
          tweet = tweet[:mo.start()] + tweet[mo.end():]
          mo = re.search(r"[#@]" , tweet)
+
      return tweet
 
 def split_sentences(tweet): # Step 5 of part 1.
@@ -94,24 +102,19 @@ def split_sentences(tweet): # Step 5 of part 1.
      mo = re.search("[\.!?]+", tweet)
      i = 0
      while mo:
-         j=0
          split_tweet += tweet[i:mo.end() + 1]
-
          if mo.end() < len(tweet) and tweet[mo.end()+1] == '"':
              split_tweet += '"'
              #j = 1
-             
-
          if (tweet[mo.start()] != '.'):
              split_tweet += '\n'
          #elif not (word in file):
          #    split_tweet += '\n'
-         
-
 
          i = mo.start()
          tweet = tweet[:mo.start()] + tweet[mo.end() + 1:]
          mo = re.search("[\.!?]+", tweet)
+
      return split_tweet
 
 # Note: Step 6 just says that ellipsis and repeated punctuation (eg !!!) do NOT get split.
@@ -131,9 +134,20 @@ def space_tokens(tweet): # Step 7 of part 1.
          split_tweet += tweet[:mo.start()] + ' ' + tweet[mo.start():mo.end()]
          tweet = tweet[mo.end():]
          mo = re.search("[,:;]|[\.!?]+"  , tweet)
+
      return space_clitics(split_tweet + tweet)
 
 def space_clitics(tweet):
+    """
+    Return the input tweet with spaces between each clitic.
+
+    input:
+        tweet - a string where each word and punctuation mark
+                are separated by a space.
+    output:
+        split_tweet - a string where each word, punctuation mark,
+                      and clitic are separated by a space.
+    """
     # First we match a quote followed by zero or more characters, then a space.
     mo = re.search("'[^\s]*\s", tweet) # Will detect any quote marks and go to the end of the word.
     split_tweet = ''
@@ -177,6 +191,7 @@ def add_demarcation(tweet, n): # Step 9 of part 1.
                        numeric class n demarcated on a separate line.
     """
     demarcation = '<A={}>\n'.format(n)
+
     return demarcation + tweet
       
 def normalize_tweet(tweet):
