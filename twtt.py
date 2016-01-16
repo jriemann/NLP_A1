@@ -9,6 +9,7 @@ import HTMLParser
 # WARNING: Change this before submitting.
 INPUT_FILE = 'testdata.manual.2009.06.14.csv'
 ABBR_FILE = 'abbrev.english'
+TAGGER = NLPlib.NLPlib()
 
 with open(ABBR_FILE) as f:
     ABBREVIATIONS = map(lambda x: x.rstrip('\n'), f.readlines())
@@ -23,10 +24,10 @@ def strip_html(tweet): # Step 1 of part 1.
      output:
         tweet - a string representing a tweet.
      """
-     mo = re.search(r"<[^>]+>" , tweet)
+     mo = re.search("[\s]*<[^>]+>" , tweet)
      while mo:
          tweet = tweet[:mo.start()] + tweet[mo.end():]
-	 mo = re.search(r"<[^>]+>" , tweet)
+	 mo = re.search("[\s]*<[^>]+>" , tweet)
      return tweet
 
 def html_char_to_ascii(tweet): # Step 2 of part 1.
@@ -56,10 +57,11 @@ def strip_urls(tweet): # Step 3 of part 1.
      output:
         tweet - a string representing a tweet.
      """
-     mo = re.search("([Hh]ttps?|www)[^\s]*\s+", tweet)
+     mo = re.search("[\s]*([Hh]ttps?|www)[^\s]*[\s]*", tweet)
      while mo:
-         tweet = tweet[:mo.start()] + tweet[mo.end():]
-         mo = re.search("([Hh]ttps?|www)[^\s]*\s+", tweet)
+         tweet = tweet[:mo.start()] + tweet[mo.end()-1:]
+         mo = re.search("[\s]*([Hh]ttps?|www)[^\s]*[\s]*", tweet)
+        # mo = re.search("([Hh]ttps?|www)[^\s]*[\s]+", tweet)
      return tweet
 
 def strip_twitter_chars(tweet): # Step 4 of part 1.
@@ -130,8 +132,6 @@ def is_abbreviation(tweet, i):
             break
     return word[::-1] in ABBREVIATIONS
 
-# Note: Step 6 just says that ellipsis and repeated punctuation (eg !!!) do NOT get split.
-
 def space_tokens(tweet): # Step 7 of part 1.
      """
      Return the input tweet with all distinct token separated by a space.
@@ -175,18 +175,23 @@ def space_clitics(tweet):
     return split_tweet + tweet
 
      
-def tag_tokens(tokens): # Step 8 of part 1.
+def tag_tokens(tweet): # Step 8 of part 1.
     """
     Return a string where space-separated tokens are each tagged
     with their part-of-speech.
 
     input:
-       tokens - a string of space-separated tokens.
+       tweet - a string representing a tweet.
     output:
        tagged - a string of space-separated tokens, each tagged
                 with their part-of-speech.
     """
-    pass
+    tokens = tweet.split(' ')
+    tags = TAGGER.tag(tokens)
+    for i in range(0, len(tokens)):
+        tokens[i] = tokens[i].rstrip('\n') + '/' + tags[i]
+    tokens = " ".join(tokens)
+    return tokens
 
 def add_demarcation(tweet, n): # Step 9 of part 1.
     """
@@ -203,13 +208,12 @@ def add_demarcation(tweet, n): # Step 9 of part 1.
     demarcation = '<A={}>\n'.format(n)
     return demarcation + tweet
       
-def normalize_tweet(tweet):
+def normalize_tweet(tweet_text, tweet_class):
     """
     Return the input tweet in normalized form. That is: 
         - all HTML tags and attributes are removed 
         - all HTML characters code are replaced with their ASCII equivalents
         - all URLs are removed
-        - all Twitter user tags (@) and hash tags (#) are removed
         - each sentence within a tweet is on its own line
         - each token, including punctuation and cltiics, is separated by spaces
         - ellipsis and other kinds of multiple punctuation are not split
@@ -221,20 +225,25 @@ def normalize_tweet(tweet):
     output:
         normalized_tweet - the input tweet in normalized form.
     """
-    tweet_class = tweet[0]
-    tweet_text = tweet[-1]
-    
+    # Apply all filters here.
     tweet_text = strip_html(tweet_text)
-    # Apply all other filters here.
-
+    tweet_text = html_char_to_ascii(tweet_text)
+    tweet_text = strip_urls(tweet_text)
+    tweet_text = strip_twitter_chars(tweet_text)
+    tweet_text = split_sentences(tweet_text)
+    tweet_text = space_tokens(tweet_text)
+    newline_split_tweets = tweet_text.split('\n')
+    tweet_text = ''
+    for line in newline_split_tweets:
+        tweet_text += tag_tokens(line) + '\n'
+    tweet_text = tweet_text.rstrip('\n')
+    tweet_text = add_demarcation(tweet_text, tweet_class)
     return tweet_text + '\n'
 
 def main(tweets, output_file):
     for tweet in tweets: # A tweet is a list of length 6, containing the various fields.
-        normalized_tweet = normalize_tweet(tweet)
-        # Write out the file
+        normalized_tweet = normalize_tweet(tweet[-1], tweet[0])
         output_file.write(normalized_tweet)
-
 
 if __name__ == "__main__":
     args = sys.argv
@@ -244,8 +253,5 @@ if __name__ == "__main__":
     open_input_file = open(input_file_name, 'r')
     open_output_file = open(output_file_name, 'w+')
     reader = csv.reader(open_input_file, delimiter=',')
-
     main(reader, open_output_file)
     print("Done")
-    print ABBREVIATIONS
-    
