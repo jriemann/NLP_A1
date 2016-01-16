@@ -85,14 +85,33 @@ def split_sentences(tweet): # Step 5 of part 1.
         split_tweet - a string representing a tweet, where each
                       distinct sentence is on it's own line.
      """
+     # For now, let's get all possible break points, then remove those that are preceded by a word in the list.
+     # This will not be perfect but for now it's okay. We might get cases where we don't split when we actually should
+     # have, like if one of the words in the file ends a sentence. 
+     # First, let's get all indices that might be ends of sentences.
+
      split_tweet = ''
-     mo = re.search("[\.!?]", tweet)
+     mo = re.search("[\.!?]+", tweet)
      i = 0
      while mo:
-         split_tweet += tweet[i:mo.start() + 1] + '\n'
+         j=0
+         split_tweet += tweet[i:mo.end() + 1]
+
+         if mo.end() < len(tweet) and tweet[mo.end()+1] == '"':
+             split_tweet += '"'
+             #j = 1
+             
+
+         if (tweet[mo.start()] != '.'):
+             split_tweet += '\n'
+         #elif not (word in file):
+         #    split_tweet += '\n'
+         
+
+
          i = mo.start()
          tweet = tweet[:mo.start()] + tweet[mo.end() + 1:]
-         mo = re.search("[\.!?]", tweet)
+         mo = re.search("[\.!?]+", tweet)
      return split_tweet
 
 # Note: Step 6 just says that ellipsis and repeated punctuation (eg !!!) do NOT get split.
@@ -106,11 +125,31 @@ def space_tokens(tweet): # Step 7 of part 1.
      output:
         tweet - a string representing a tweet.
      """
-     mo = re.search(r"[.,:;?!]" , tweet)
+     mo = re.search("[,:;]|[\.!?]+"  , tweet) # dog... asdf -> dog ... asdf
+     split_tweet = ''
      while mo:
-         tweet = tweet[:mo.start()] + tweet[mo.end():]
-         mo = re.search(r"[#@]" , tweet)
-     return tweet
+         split_tweet += tweet[:mo.start()] + ' ' + tweet[mo.start():mo.end()]
+         tweet = tweet[mo.end():]
+         mo = re.search("[,:;]|[\.!?]+"  , tweet)
+     return space_clitics(split_tweet + tweet)
+
+def space_clitics(tweet):
+    # First we match a quote followed by zero or more characters, then a space.
+    mo = re.search("'[^\s]*\s", tweet) # Will detect any quote marks and go to the end of the word.
+    split_tweet = ''
+    while mo:
+        # If the quote is not followed by an s, we split the quote. So dogs' -> dogs '
+        if tweet[mo.start()+1] == 't': # we grab the char preceding the apostrophe.
+            split_tweet += tweet[:mo.start()-1] + ' ' + tweet[mo.start()-1:mo.end()]
+        else: # We split from apostrophe onward to end of word (this includes cases such as dogs' -> dogs ' )
+            # before mo.start() is where we want to insert a space
+            split_tweet += tweet[:mo.start()] + ' ' + tweet[mo.start():mo.end()]
+        tweet = tweet[mo.end():]
+        j = mo.end()
+        mo = re.search("'[^\s]*\s", tweet) # Will detect any quote marks and go to the end of the word.
+
+    return split_tweet + tweet
+
      
 def tag_tokens(tokens): # Step 8 of part 1.
     """
