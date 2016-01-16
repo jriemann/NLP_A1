@@ -11,7 +11,7 @@ INPUT_FILE = 'testdata.manual.2009.06.14.csv'
 ABBR_FILE = 'abbrev.english'
 
 with open(ABBR_FILE) as f:
-    ABBREVIATIONS = f.readlines()
+    ABBREVIATIONS = map(lambda x: x.rstrip('\n'), f.readlines())
 
 def strip_html(tweet): # Step 1 of part 1.
      """
@@ -27,7 +27,6 @@ def strip_html(tweet): # Step 1 of part 1.
      while mo:
          tweet = tweet[:mo.start()] + tweet[mo.end():]
 	 mo = re.search(r"<[^>]+>" , tweet)
-
      return tweet
 
 def html_char_to_ascii(tweet): # Step 2 of part 1.
@@ -41,7 +40,6 @@ def html_char_to_ascii(tweet): # Step 2 of part 1.
         tweet - a string representing a tweet.
      """
      h = HTMLParser.HTMLParser()
-
      return h.unescape(tweet)
 
 def strip_urls(tweet): # Step 3 of part 1.
@@ -62,7 +60,6 @@ def strip_urls(tweet): # Step 3 of part 1.
      while mo:
          tweet = tweet[:mo.start()] + tweet[mo.end():]
          mo = re.search("([Hh]ttps?|www)[^\s]*\s+", tweet)
-
      return tweet
 
 def strip_twitter_chars(tweet): # Step 4 of part 1.
@@ -79,7 +76,6 @@ def strip_twitter_chars(tweet): # Step 4 of part 1.
      while mo:
          tweet = tweet[:mo.start()] + tweet[mo.end():]
          mo = re.search(r"[#@]" , tweet)
-
      return tweet
 
 def split_sentences(tweet): # Step 5 of part 1.
@@ -93,29 +89,46 @@ def split_sentences(tweet): # Step 5 of part 1.
         split_tweet - a string representing a tweet, where each
                       distinct sentence is on it's own line.
      """
-     # For now, let's get all possible break points, then remove those that are preceded by a word in the list.
-     # This will not be perfect but for now it's okay. We might get cases where we don't split when we actually should
-     # have, like if one of the words in the file ends a sentence. 
-     # First, let's get all indices that might be ends of sentences.
-
      split_tweet = ''
      mo = re.search("[\.!?]+", tweet)
      i = 0
      while mo:
-         split_tweet += tweet[i:mo.end() + 1]
-         if mo.end() < len(tweet) and tweet[mo.end()+1] == '"':
-             split_tweet += '"'
-             #j = 1
-         if (tweet[mo.start()] != '.'):
-             split_tweet += '\n'
-         #elif not (word in file):
-         #    split_tweet += '\n'
-
-         i = mo.start()
-         tweet = tweet[:mo.start()] + tweet[mo.end() + 1:]
+         n = len(tweet)
+         if mo.end() < n and tweet[mo.end()] in ["'", '"']:
+             split_tweet += tweet[i:mo.end() + 1] + '\n'
+             i = 1
+         elif tweet[mo.end() - 1] in ['!', '?']:
+             split_tweet += tweet[i:mo.end()] + '\n'
+             i = 0
+         elif tweet[mo.end() - 1] == '.':
+             if is_abbreviation(tweet, mo.end() - 1):
+                 split_tweet += tweet[i:mo.end()+1]
+             else:
+                 split_tweet += tweet[i:mo.end()] + '\n'
+             i = 0
+         tweet = tweet[mo.end() + 1:]
          mo = re.search("[\.!?]+", tweet)
+     return (split_tweet + tweet).rstrip('\n')
 
-     return split_tweet
+def is_abbreviation(tweet, i):
+    """
+    Return True iff the word terminated by the period at index i is
+    an abbreviation.
+
+    input:
+        tweet - a string representing a tweet.
+        i - the index of a period in tweet.
+    output:
+        True - the word terminated at index i is an abbreviation.
+        False - otherwise.
+    """
+    word = ''
+    while i >= 0:
+        word += tweet[i]
+        i -= 1
+        if tweet[i] == ' ':
+            break
+    return word[::-1] in ABBREVIATIONS
 
 # Note: Step 6 just says that ellipsis and repeated punctuation (eg !!!) do NOT get split.
 
@@ -134,7 +147,6 @@ def space_tokens(tweet): # Step 7 of part 1.
          split_tweet += tweet[:mo.start()] + ' ' + tweet[mo.start():mo.end()]
          tweet = tweet[mo.end():]
          mo = re.search("[,:;]|[\.!?]+"  , tweet)
-
      return space_clitics(split_tweet + tweet)
 
 def space_clitics(tweet):
@@ -159,9 +171,7 @@ def space_clitics(tweet):
             # before mo.start() is where we want to insert a space
             split_tweet += tweet[:mo.start()] + ' ' + tweet[mo.start():mo.end()]
         tweet = tweet[mo.end():]
-        j = mo.end()
         mo = re.search("'[^\s]*\s", tweet) # Will detect any quote marks and go to the end of the word.
-
     return split_tweet + tweet
 
      
@@ -191,7 +201,6 @@ def add_demarcation(tweet, n): # Step 9 of part 1.
                        numeric class n demarcated on a separate line.
     """
     demarcation = '<A={}>\n'.format(n)
-
     return demarcation + tweet
       
 def normalize_tweet(tweet):
@@ -238,4 +247,5 @@ if __name__ == "__main__":
 
     main(reader, open_output_file)
     print("Done")
+    print ABBREVIATIONS
     
