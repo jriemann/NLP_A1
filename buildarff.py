@@ -247,7 +247,14 @@ def count_uppercase(tweet):
     Return the number of occurences of uppercase words of
     length greater than or equal to 2.
     '''
-    pass
+    count = 0
+    for sentence in as_sentences(tweet):
+        tokens = sentence_to_tokens(sentence)
+        token_to_upper = map(lambda s: 1 
+                                    if len(s) > 1 and s.isupper() 
+                                    else 0, tokens)
+        count += sum(token_to_upper)
+    return count
 
 def count_punctuation(tweet):
     '''
