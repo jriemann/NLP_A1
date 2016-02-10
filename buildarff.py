@@ -109,6 +109,13 @@ def sentence_to_tokens(sentence):
     split_tokens = map(lambda s: s.split('/')[0], sentence.split(' '))
     return filter(None, split_tokens)
 
+def sentence_no_tags(sentence):
+    '''
+    Return a string of the input sentence with tags stripped
+    from tokens.
+    '''
+    return ' '.join(sentence_to_tokens(sentence))
+
 def count_sentences(tweet):
     '''
     Return the number of sentences in tweet.
@@ -171,7 +178,9 @@ def count_pronoun(tweet, nth_person):
     count = 0
     for sentence in as_sentences(tweet):
         tokens = sentence_to_tokens(sentence)
-        token_to_pronoun = map(lambda s: 1 if s in pronouns else 0, tokens)
+        token_to_pronoun = map(lambda s: 1 
+                                         if s.lower() in pronouns 
+                                         else 0, tokens)
         count += sum(token_to_pronoun)
     return count
 
@@ -191,7 +200,25 @@ def count_verbs(tweet):
     Return the number of occurences in tweet of past and
     future tense verbs in tweet. 
     '''
-    pass
+    past_tags = "(/PRP\$?|/VBD|/VBG|/VBN)"
+    future_tags = "(/PRP\$|/VB|/VBP|/VBZ|/MD)"
+    past_fixes = "(has|had|have|were|was|did)?"
+    future_fixes = "('nt|'ll|will|won't|gonna|going\sto)?"
+    past_regex = past_fixes + past_tags + '\s?[a-z]*' + past_tags
+    future_regex = future_fixes + future_tags + '\s?[a-z]*' + future_tags
+    past_count, future_count = 0, 0
+    for sentence in as_sentences(tweet):
+        print sentence
+        past_count += regex_count(sentence, past_regex)
+        future_count += regex_count(sentence, future_regex)
+    return past_count, future_count
+
+def regex_count(sentence, regex):
+    '''
+    Return the number of times regex is found in sentence.
+    '''
+    r = re.compile(regex, re.IGNORECASE)
+    return len(r.findall(sentence))
 
 def count_nouns(tweet):
     '''
@@ -238,7 +265,9 @@ def count_slang(tweet):
     f.close()
     for sentence in as_sentences(tweet):
         tokens = sentence_to_tokens(sentence)
-        token_to_slang = map(lambda s: 1 if s in slang_words else 0, tokens)
+        token_to_slang = map(lambda s: 1 
+                                       if s.lower() in slang_words 
+                                       else 0, tokens)
         count += sum(token_to_slang)
     return count
 
@@ -283,8 +312,8 @@ def count_punctuation(tweet, punc):
     '''
     count = 0
     for sentence in as_sentences(tweet):
-        sentence_no_tags = ' '.join(sentence_to_tokens(sentence))
-        count += len(re.findall('\{}+'.format(punc), sentence_no_tags))
+        tokens_no_tags = sentence_no_tags(sentence) 
+        count += len(re.findall('\{}+'.format(punc), tokens__no_tags))
     return count
 
 if __name__ == "__main__":
@@ -298,5 +327,3 @@ if __name__ == "__main__":
         max_per_class = -1
 
     data = load_tweets(input_file_name, max_per_class)
-    for d in data:
-        print count_punctuations(d)
