@@ -80,7 +80,7 @@ def is_punctuation(s):
     '''
     Return True iff s is a punctuation token.
     '''
-    return True if re.match('[,:;]|[\.!?+', s) else False
+    return True if re.match('[,:;]|[\.!?]+', s) else False
 
 def as_sentences(tweet):
     '''
@@ -94,14 +94,14 @@ def sentence_to_tags(sentence):
     Return a list of tags corresponding to the tagged tokens
     in sentence.
     '''
-    return map(lambda s: s.split().split('/')[1], sentence)
+    return map(lambda s: s.split('/')[1], sentence.split(' '))
 
 def sentence_to_tokens(sentence):
     '''
     Return a list of tokens corresponding to the tagged tokens
     in sentence.
     '''
-    return map(lambda s: s.split().split('/')[0], sentence)
+    return map(lambda s: s.split('/')[0], sentence.split(' '))
 
 def count_sentences(tweet):
     '''
@@ -125,7 +125,7 @@ def avg_token_length(tweet):
         lengths = map(lambda s: 0 if is_punctuation(s) else len(s), tokens)
         num_tokens += len(lengths)
         total += sum(lengths)
-    return 
+    return total / num_tokens
 
 def avg_sentence_length(tweet):
     '''
@@ -245,4 +245,4 @@ if __name__ == "__main__":
 
     data = load_tweets(input_file_name, max_per_class)
     for d in data:
-        print avg_token_length(d)
+        avg_token_length(d)
