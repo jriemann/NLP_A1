@@ -261,7 +261,7 @@ def partition_by_class(reader, gid, n):
     group id.
     '''
     num_classes = len(CLASSES)
-    num_per_class = n / num_classes
+    num_per_class = n // num_classes
     data = []
     for cls in CLASSES:
         lower_i = CLASS_INDICES[cls] + (gid * num_per_class)

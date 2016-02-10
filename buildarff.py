@@ -13,7 +13,40 @@ def load_tweets(input_file_name, max_per_class):
     '''
     if max_per_class == -1:
         data = load_all_tweets(input_file_name)
+    else:
+        data = load_n_tweets(input_file_name, max_per_class)
+    return data
 
+def load_n_tweets(input_file_name, n):
+    '''
+    Return n normalized tweets per class in a list.
+    '''
+    data = []
+    for cls in CLASSES:
+        f = open(input_file_name, 'r')
+        data += load_n_class_tweets(f, n, cls)
+        f.close()
+    return data
+
+def load_n_class_tweets(f, n, cls):
+    '''
+    Return n normalized tweets - stored in file f - of class cls.
+    '''
+    data = []
+    L = f.readlines()
+    curr, new = (L[0], False) if is_demarcation(L[0], cls) else ('', True)
+    for line in L[1:]:
+        if is_demarcation(line, cls):
+            curr = line
+            new = False
+        elif not new and not is_demarcation(line):
+            curr += line
+        elif is_demarcation(line) and curr:
+            data += [curr]
+            curr = ''
+            new = True
+        if len(data) == n:
+            break
     return data
 
 def load_all_tweets(input_file_name):
@@ -23,16 +56,25 @@ def load_all_tweets(input_file_name):
     '''
     data = []
     f = open(input_file_name, 'r')
-    lines = f.readlines()
-    curr = lines[0]
-    for line in lines[1:]:
-        if is_demarcation(line.rstrip('\n')):
+    L = f.readlines()
+    curr = L[0]
+    for line in L[1:]:
+        if is_demarcation(line):
             data += [curr]
             curr = line
         else:
             curr += line
     data += [curr]
+    f.close()
     return data
+
+def is_demarcation(s, c=''.join(CLASSES)):
+    '''
+    Return True iff s is a tweet demarcation of the form
+    <A=c>, where c is the class of that tweet.
+    By default, we check for any class.
+    '''
+    return True if re.match('<A=[{}]>'.format(c), s.rstrip('\n')) else False
 
 def count_sentences(tweet):
     '''
@@ -129,14 +171,6 @@ def count_punctuation(tweet):
     '''
     pass
 
-def is_demarcation(s):
-    '''
-    Return True iff s is a tweet demarcation of the form
-    <A=#>, where # is the class of that tweet.
-    '''
-    c = ''.join(CLASSES)
-    return True if re.match('<A=[{}]>'.format(c), s) else False
-
 if __name__ == "__main__":
     args = sys.argv
     input_file_name = args[1] # eg train.twt
@@ -147,6 +181,4 @@ if __name__ == "__main__":
     else:
         max_per_class = -1
 
-    data = load_tweets('very_small_test.twt', -1)
-    for d in data:
-        print count_sentences(d)
+    data = load_tweets(input_file_name, max_per_class)
