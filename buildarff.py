@@ -256,7 +256,7 @@ def count_uppercase(tweet):
         count += sum(token_to_upper)
     return count
 
-def count_punctuation(tweet):
+def count_punctuations(tweet):
     '''
     Return the number of occurences of the following
     characters:
@@ -268,8 +268,24 @@ def count_punctuation(tweet):
         )    (left parenthesis)
         ...  (ellipses)
     '''
-    punctuation = [',', ':', ';', '-', '(', ')', '...']
-    pass
+    punctuations = [',', ':', ';', '-', '(', ')', '...']
+    punc_to_count = {}
+    for punc in punctuations:
+        punc_to_count[punc] = count_punctuation(tweet, punc)
+    return punc_to_count
+
+def count_punctuation(tweet, punc):
+    '''
+    Return the number of occurences in tweet of punc.
+    Multiple punctuations are considered single tokens,
+    so we count how many matches of the regular expression
+    punc+ we find in tweet.
+    '''
+    count = 0
+    for sentence in as_sentences(tweet):
+        sentence_no_tags = ' '.join(sentence_to_tokens(sentence))
+        count += len(re.findall('\{}+'.format(punc), sentence_no_tags))
+    return count
 
 if __name__ == "__main__":
     args = sys.argv
@@ -282,3 +298,5 @@ if __name__ == "__main__":
         max_per_class = -1
 
     data = load_tweets(input_file_name, max_per_class)
+    for d in data:
+        print count_punctuations(d)
