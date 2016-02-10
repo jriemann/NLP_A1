@@ -80,7 +80,11 @@ def count_sentences(tweet):
     '''
     Return the number of sentences in tweet.
     '''
-    return len(tweet.split('\n')) - 2
+    # Upon splitting on newlines, the first element
+    # of the resulting list will be the tweet's
+    # demarcation and the last element will be the
+    # empty string. All other elements are sentences.
+    return len(tweet.split('\n')[1:-1])
 
 def avg_token_length(tweet):
     '''
@@ -88,13 +92,19 @@ def avg_token_length(tweet):
     measured by number of characters.
     '''
     pass
-    
+
 def avg_sentence_length(tweet):
     '''
     Return the average length of sentences in tweet,
     measured by number of tokens 
     '''
-    pass
+    sentences = tweet.split('\n')[1:-1]
+    num_sentences = count_sentences(tweet)
+    total = 0
+    for sentence in sentences:
+        tagged_tokens = sentence.split()
+        total += len(tagged_tokens)
+    return total / num_sentences
 
 def tag_counts(tweet):
     '''
@@ -182,3 +192,4 @@ if __name__ == "__main__":
         max_per_class = -1
 
     data = load_tweets(input_file_name, max_per_class)
+    print data[0]
