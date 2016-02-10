@@ -76,6 +76,12 @@ def is_demarcation(s, c=''.join(CLASSES)):
     '''
     return True if re.match('<A=[{}]>'.format(c), s.rstrip('\n')) else False
 
+def is_punctuation(s):
+    '''
+    Return True iff s is a punctuation token.
+    '''
+    return True if re.match('[,:;]|[\.!?+', s) else False
+
 def as_sentences(tweet):
     '''
     Return the input tweet as a list of sentences,
@@ -88,14 +94,14 @@ def sentence_to_tags(sentence):
     Return a list of tags corresponding to the tagged tokens
     in sentence.
     '''
-    return map(lambda s: sentence.split().split('/')[1], sentence)
+    return map(lambda s: s.split().split('/')[1], sentence)
 
 def sentence_to_tokens(sentence):
     '''
     Return a list of tokens corresponding to the tagged tokens
     in sentence.
     '''
-    return map(lambda s: sentence.split().split('/')[0], sentence)
+    return map(lambda s: s.split().split('/')[0], sentence)
 
 def count_sentences(tweet):
     '''
@@ -112,7 +118,14 @@ def avg_token_length(tweet):
     Return the average length of tokens in tweet,
     measured by number of characters.
     '''
-    pass 
+    num_tokens = 0
+    total = 0
+    for sentence in as_sentences(tweet):
+        tokens = sentence_to_tokens(sentence)
+        lengths = map(lambda s: 0 if is_punctuation(s) else len(s), tokens)
+        num_tokens += len(lengths)
+        total += sum(lengths)
+    return 
 
 def avg_sentence_length(tweet):
     '''
@@ -232,4 +245,4 @@ if __name__ == "__main__":
 
     data = load_tweets(input_file_name, max_per_class)
     for d in data:
-        print count_conjunctions(d)
+        print avg_token_length(d)
