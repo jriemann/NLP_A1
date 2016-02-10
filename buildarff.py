@@ -88,14 +88,14 @@ def sentence_to_tags(sentence):
     Return a list of tags corresponding to the tagged tokens
     in sentence.
     '''
-    return map(lambda s: sentence.split('/')[1], sentence)
+    return map(lambda s: sentence.split().split('/')[1], sentence)
 
 def sentence_to_tokens(sentence):
     '''
     Return a list of tokens corresponding to the tagged tokens
     in sentence.
     '''
-    return map(lambda s: sentence.split('/')[0], sentence)
+    return map(lambda s: sentence.split().split('/')[0], sentence)
 
 def count_sentences(tweet):
     '''
@@ -112,7 +112,7 @@ def avg_token_length(tweet):
     Return the average length of tokens in tweet,
     measured by number of characters.
     '''
-    pass
+    pass 
 
 def avg_sentence_length(tweet):
     '''
@@ -147,7 +147,6 @@ def count_conjunctions(tweet):
     '''
     count = 0
     for sentence in as_sentences(tweet):
-        tagged_tokens = sentence.split()
         tags = sentence_to_tags(sentence)
         count += tags.count('CC')
     return count
@@ -164,20 +163,35 @@ def count_nouns(tweet):
     Return the number of occurences in tweet of common nouns
     and proper nouns.
     '''
-    pass
+    common_count, proper_count = 0, 0
+    for sentence in as_sentences(tweet):
+        tags = sentence_to_tags(sentence)
+        common_count += tags.count('NN') + tags.count('NNS')
+        proper_count += tags.count('NNP'), + tags.count('NNPS')
+    return common_count, proper_count
 
 def count_adverbs(tweet):
     '''
     Return the number of occurences in tweet of adverbs.
+    Adverbs are tagged RB, RBR, or RBS.
     '''
-    pass
+    count = 0
+    for sentence in as_sentences(tweet):
+        tags = sentence_to_tags(sentence)
+        count += tags.count('RB') + tags.count('RBR') + tags.count('RBS')
+    return count
 
 def count_wh_words(tweet):
     '''
     Return the number of occurences in tweet of wh-words,
     i.e. words tagged with WDT / WP / WP$ / WRB.
     '''
-    pass
+    count = 0
+    for sentence in as_sentences(tweet):
+        tags = sentence_to_tags(sentence)
+        count += tags.count('WDT') + tags.count('WP')
+        count += tags.count('WP$') + tags.count('WRB')
+    return count
 
 def count_slang(tweet):
     '''
