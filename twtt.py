@@ -4,12 +4,18 @@ import NLPlib
 import sys
 import csv
 import re
+import codecs
 import HTMLParser
+import io
 
 # WARNING: Change this before submitting.
 INPUT_FILE = 'testdata.manual.2009.06.14.csv'
 ABBR_FILE = 'abbrev.english'
 TAGGER = NLPlib.NLPlib()
+
+CLASSES = [0, 4]
+CLASS_INDICES = {0: 0, 4: 800000}
+NUM_TRAIN = 11000
 
 with open(ABBR_FILE) as f:
     ABBREVIATIONS = map(lambda x: x.rstrip('\n'), f.readlines())
@@ -27,7 +33,7 @@ def strip_html(tweet): # Step 1 of part 1.
      mo = re.search("[\s]*<[^>]+>" , tweet)
      while mo:
          tweet = tweet[:mo.start()] + tweet[mo.end():]
-	 mo = re.search("[\s]*<[^>]+>" , tweet)
+         mo = re.search("[\s]*<[^>]+>" , tweet)
      return tweet
 
 def html_char_to_ascii(tweet): # Step 2 of part 1.
@@ -40,6 +46,7 @@ def html_char_to_ascii(tweet): # Step 2 of part 1.
      ouput:
         tweet - a string representing a tweet.
      """
+     tweet = ''.join([c if ord(c) < 128 else '' for c in tweet])
      h = HTMLParser.HTMLParser()
      return h.unescape(tweet)
 
@@ -61,7 +68,6 @@ def strip_urls(tweet): # Step 3 of part 1.
      while mo:
          tweet = tweet[:mo.start()] + tweet[mo.end()-1:]
          mo = re.search("[\s]*([Hh]ttps?|www)[^\s]*[\s]*", tweet)
-        # mo = re.search("([Hh]ttps?|www)[^\s]*[\s]+", tweet)
      return tweet
 
 def strip_twitter_chars(tweet): # Step 4 of part 1.
@@ -94,6 +100,7 @@ def split_sentences(tweet): # Step 5 of part 1.
      split_tweet = ''
      mo = re.search("[\.!?]+", tweet)
      i = 0
+
      while mo:
          n = len(tweet)
          if mo.end() < n and tweet[mo.end()] in ["'", '"']:
@@ -110,6 +117,7 @@ def split_sentences(tweet): # Step 5 of part 1.
              i = 0
          tweet = tweet[mo.end() + 1:]
          mo = re.search("[\.!?]+", tweet)
+
      return (split_tweet + tweet).rstrip('\n')
 
 def is_abbreviation(tweet, i):
@@ -167,11 +175,13 @@ def space_clitics(tweet):
         # If the quote is not followed by an s, we split the quote. So dogs' -> dogs '
         if tweet[mo.start()+1] == 't': # we grab the char preceding the apostrophe.
             split_tweet += tweet[:mo.start()-1] + ' ' + tweet[mo.start()-1:mo.end()]
-        else: # We split from apostrophe onward to end of word (this includes cases such as dogs' -> dogs ' )
+        else:
+            # We split from apostrophe onward to end of word 
+            # (this includes cases such as dogs' -> dogs ' )
             # before mo.start() is where we want to insert a space
             split_tweet += tweet[:mo.start()] + ' ' + tweet[mo.start():mo.end()]
         tweet = tweet[mo.end():]
-        mo = re.search("'[^\s]*\s", tweet) # Will detect any quote marks and go to the end of the word.
+        mo = re.search("'[^\s]*\s", tweet) 
     return split_tweet + tweet
 
      
@@ -234,11 +244,31 @@ def normalize_tweet(tweet_text, tweet_class):
     tweet_text = space_tokens(tweet_text)
     newline_split_tweets = tweet_text.split('\n')
     tweet_text = ''
+
     for line in newline_split_tweets:
         tweet_text += tag_tokens(line) + '\n'
+
     tweet_text = tweet_text.rstrip('\n')
     tweet_text = add_demarcation(tweet_text, tweet_class)
+
     return tweet_text + '\n'
+
+def partition_by_class(reader, gid, n):
+    '''
+    Return a list of a total of n data points with
+    equal representation for each class in CLASSES.
+    Data is stored in reader, which was obtained by reading
+    a formatted CSV. Partitions are determined by gid, which is the
+    group id.
+    '''
+    num_classes = len(CLASSES)
+    num_per_class = n / num_classes
+    data = []
+    for cls in CLASSES:
+        lower_i = CLASS_INDICES[cls] + (gid * num_per_class)
+        upper_i = CLASS_INDICES[cls] + ((gid + 1) * num_per_class - 1)
+        data += reader[lower_i:upper_i]
+    return data
 
 def main(tweets, output_file):
     for tweet in tweets: # A tweet is a list of length 6, containing the various fields.
@@ -247,11 +277,18 @@ def main(tweets, output_file):
 
 if __name__ == "__main__":
     args = sys.argv
+    argc = len(args)
     input_file_name = args[1]
-    group_id = int(args[2])
-    output_file_name = args[3] 
     open_input_file = open(input_file_name, 'r')
+    reader = list(csv.reader(open_input_file, delimiter=','))
+
+    if argc == 4:
+        gid = int(args[2])
+        output_file_name = args[3]
+        data = partition_by_class(reader, gid, NUM_TRAIN)
+    elif argc == 3:
+        output_file_name = args[2]
+        data = reader
+
     open_output_file = open(output_file_name, 'w+')
-    reader = csv.reader(open_input_file, delimiter=',')
-    main(reader, open_output_file)
-    print("Done")
+    main(data, open_output_file)
