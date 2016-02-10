@@ -76,6 +76,27 @@ def is_demarcation(s, c=''.join(CLASSES)):
     '''
     return True if re.match('<A=[{}]>'.format(c), s.rstrip('\n')) else False
 
+def as_sentences(tweet):
+    '''
+    Return the input tweet as a list of sentences,
+    omitting the demarcation.
+    '''
+    return tweet.split('\n')[1:-1]
+
+def sentence_to_tags(sentence):
+    '''
+    Return a list of tags corresponding to the tagged tokens
+    in sentence.
+    '''
+    return map(lambda s: sentence.split('/')[1], sentence)
+
+def sentence_to_tokens(sentence):
+    '''
+    Return a list of tokens corresponding to the tagged tokens
+    in sentence.
+    '''
+    return map(lambda s: sentence.split('/')[0], sentence)
+
 def count_sentences(tweet):
     '''
     Return the number of sentences in tweet.
@@ -84,7 +105,7 @@ def count_sentences(tweet):
     # of the resulting list will be the tweet's
     # demarcation and the last element will be the
     # empty string. All other elements are sentences.
-    return len(tweet.split('\n')[1:-1])
+    return len(as_sentences(tweet))
 
 def avg_token_length(tweet):
     '''
@@ -98,10 +119,9 @@ def avg_sentence_length(tweet):
     Return the average length of sentences in tweet,
     measured by number of tokens 
     '''
-    sentences = tweet.split('\n')[1:-1]
     num_sentences = count_sentences(tweet)
     total = 0
-    for sentence in sentences:
+    for sentence in as_sentences(tweet):
         tagged_tokens = sentence.split()
         total += len(tagged_tokens)
     return total / num_sentences
@@ -125,7 +145,12 @@ def count_conjunctions(tweet):
     Return the number of occurences in tweet of the following: 
      'and', 'but', 'for', 'nor', 'or', 'so', 'yet'
     '''
-    pass
+    count = 0
+    for sentence in as_sentences(tweet):
+        tagged_tokens = sentence.split()
+        tags = sentence_to_tags(sentence)
+        count += tags.count('CC')
+    return count
 
 def count_verbs(tweet):
     '''
@@ -192,4 +217,5 @@ if __name__ == "__main__":
         max_per_class = -1
 
     data = load_tweets(input_file_name, max_per_class)
-    print data[0]
+    for d in data:
+        print count_conjunctions(d)
