@@ -80,13 +80,17 @@ def is_punctuation(s):
     '''
     Return True iff s is a punctuation token.
     '''
-    return True if re.match('[,:;]|[\.!?]+', s) else False
+    return True if re.match('[,:;]|[\.!?()$"`' + "']", s) else False
 
 def as_sentences(tweet):
     '''
     Return the input tweet as a list of sentences,
     omitting the demarcation.
     '''
+    # Upon splitting on newlines, the first element
+    # of the resulting list will be the tweet's
+    # demarcation and the last element will be the
+    # empty string. All other elements are sentences.
     return tweet.split('\n')[1:-1]
 
 def sentence_to_tags(sentence):
@@ -107,10 +111,6 @@ def count_sentences(tweet):
     '''
     Return the number of sentences in tweet.
     '''
-    # Upon splitting on newlines, the first element
-    # of the resulting list will be the tweet's
-    # demarcation and the last element will be the
-    # empty string. All other elements are sentences.
     return len(as_sentences(tweet))
 
 def avg_token_length(tweet):
@@ -149,9 +149,29 @@ def tag_counts(tweet):
 def count_pronouns(tweet):
     '''
     Return the number of occurences in tweet of first, second,
-    and third person pronouns.
+    and third person pronouns in the form of a tuple
+        (first_person, second_person, third_person)
     '''
-    pass
+    pronouns = ['First', 'Second', 'Third']
+    count = 0
+    for i in range(len(pronouns)):
+        pronouns[i] = count_pronoun(tweet, pronouns[i])
+    return pronouns[0], pronouns[1], pronouns[2]
+
+def count_pronoun(tweet, nth_person):
+    '''
+    Return the number of occurences in tweet of nth_person
+    pronouns.
+    '''
+    f = open(WORDLISTS_DIR + '/{}-person'.format(nth_person))
+    pronouns = [s.rstrip('\n') for s in f.readlines()]
+    f.close()
+    count = 0
+    for sentence in as_sentences(tweet):
+        tokens = sentence_to_tokens(sentence)
+        token_to_pronoun = map(lambda s: 1 if s in pronouns else 0, tokens)
+        count += sum(token_to_pronoun)
+    return count
 
 def count_conjunctions(tweet):
     '''
@@ -245,4 +265,4 @@ if __name__ == "__main__":
 
     data = load_tweets(input_file_name, max_per_class)
     for d in data:
-        avg_token_length(d)
+        print count_pronouns(d)
