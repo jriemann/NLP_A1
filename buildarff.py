@@ -1,8 +1,37 @@
 import sys
 import re
+from functools import partial
 
 CLASSES = ['0', '4']
-WORDLISTS_DIR = '/u/cs401/Wordlists'
+
+def init_arff(f):
+    '''
+    Initialize the .arff file f. That is, write the relation name
+    and enumerate the attributes.
+    '''
+    f.write('@relation {}\n\n'.format(RELATION_NAME))
+    for feature in FEATURES:
+        f.write('@attribute {} numeric\n'.format(feature))
+    f.write('@attribute emotion {' + ','.join(CLASSES) + '}\n\n')
+    f.write('@data\n')
+
+def all_data_to_arff(f, data):
+    '''
+    Write all of data to f in accordance with .arff specifications.
+    '''
+    for d in data:
+        write_arff_data_point(f, d)
+
+def write_arff_data_point(f, d):
+    '''
+    Write the single datapoint d to f in .arff format.
+    '''
+    res = []
+    for feature in FEATURES:
+        func = FEATURE_FUNCS[feature]
+        res += [str(func(d))]
+    res += [str(get_class(d))]
+    f.write(','.join(res) + '\n')
 
 def load_tweets(input_file_name, max_per_class):
     '''
@@ -82,6 +111,15 @@ def is_punctuation(s):
     '''
     return True if re.match('[,:;]|[\.!?()$"`' + "']", s) else False
 
+def get_class(tweet):
+    '''
+    Return the class of tweet.
+    '''
+# as follows:
+    demarcation = tweet.split('\n')[0]
+    cls = [int(i) for i in demarcation if i.isdigit()][0]
+    return cls
+
 def as_sentences(tweet):
     '''
     Return the input tweet as a list of sentences,
@@ -148,26 +186,7 @@ def avg_sentence_length(tweet):
         total += len(tokens)
     return total / num_sentences
 
-def tag_counts(tweet):
-    '''
-    Return a dictionary of token tags to the number of their 
-    occurences in tweet.
-    '''
-    pass
-
-def count_pronouns(tweet):
-    '''
-    Return the number of occurences in tweet of first, second,
-    and third person pronouns in the form of a tuple
-        (first_person, second_person, third_person)
-    '''
-    pronouns = ['First', 'Second', 'Third']
-    count = 0
-    for i in range(len(pronouns)):
-        pronouns[i] = count_pronoun(tweet, pronouns[i])
-    return pronouns[0], pronouns[1], pronouns[2]
-
-def count_pronoun(tweet, nth_person):
+def count_pronoun(nth_person, tweet):
     '''
     Return the number of occurences in tweet of nth_person
     pronouns.
@@ -195,23 +214,16 @@ def count_conjunctions(tweet):
         count += tags.count('CC')
     return count
 
-def count_verbs(tweet):
+def count_verbs(tense, tweet):
     '''
-    Return the number of occurences in tweet of past and
-    future tense verbs in tweet. 
+    Return the number of occurences in tweet of
+    tense-tense verbs in tweet. 
     '''
-    past_tags = "(/PRP\$?|/VBD|/VBG|/VBN)"
-    future_tags = "(/PRP\$|/VB|/VBP|/VBZ|/MD)"
-    past_fixes = "(has|had|have|were|was|did)?"
-    future_fixes = "('nt|'ll|will|won't|gonna|going\sto)?"
-    past_regex = past_fixes + past_tags + '\s?[a-z]*' + past_tags
-    future_regex = future_fixes + future_tags + '\s?[a-z]*' + future_tags
-    past_count, future_count = 0, 0
+    tense_regex = VERB_TENSE_REGEX[tense]
+    count = 0
     for sentence in as_sentences(tweet):
-        print sentence
-        past_count += regex_count(sentence, past_regex)
-        future_count += regex_count(sentence, future_regex)
-    return past_count, future_count
+        count += regex_count(sentence, tense_regex)
+    return count
 
 def regex_count(sentence, regex):
     '''
@@ -220,17 +232,25 @@ def regex_count(sentence, regex):
     r = re.compile(regex, re.IGNORECASE)
     return len(r.findall(sentence))
 
-def count_nouns(tweet):
+def count_p_nouns(tweet):
     '''
-    Return the number of occurences in tweet of common nouns
-    and proper nouns.
+    Return the number of occurences in tweet of proper nouns.
     '''
-    common_count, proper_count = 0, 0
+    count = 0
     for sentence in as_sentences(tweet):
         tags = sentence_to_tags(sentence)
-        common_count += tags.count('NN') + tags.count('NNS')
-        proper_count += tags.count('NNP'), + tags.count('NNPS')
-    return common_count, proper_count
+        count += tags.count('NNP') + tags.count('NNPS')
+    return count
+
+def count_c_nouns(tweet):
+    '''
+    Return the number of occurences in tweet of common nouns
+    '''
+    count = 0
+    for sentence in as_sentences(tweet):
+        tags = sentence_to_tags(sentence)
+        count += tags.count('NN') + tags.count('NNS')
+    return count
 
 def count_adverbs(tweet):
     '''
@@ -289,21 +309,19 @@ def count_punctuations(tweet):
     '''
     Return the number of occurences of the following
     characters:
-        ,    (commas)
-        :    (colons)
-        ;    (semi-colons)
-        -    (dashes)
-        (    (right parenthesis)
-        )    (left parenthesis)
-        ...  (ellipses)
+        ,     (commas)
+        : | ; (colons or semi colons)
+        -     (dashes)
+        (     (right parenthesis)
+        )     (left parenthesis)
+        ...   (ellipses)
     '''
-    punctuations = [',', ':', ';', '-', '(', ')', '...']
     punc_to_count = {}
-    for punc in punctuations:
+    for punc in PUNCTUATIONS:
         punc_to_count[punc] = count_punctuation(tweet, punc)
     return punc_to_count
 
-def count_punctuation(tweet, punc):
+def count_punctuation(punc, tweet):
     '''
     Return the number of occurences in tweet of punc.
     Multiple punctuations are considered single tokens,
@@ -313,8 +331,48 @@ def count_punctuation(tweet, punc):
     count = 0
     for sentence in as_sentences(tweet):
         tokens_no_tags = sentence_no_tags(sentence) 
-        count += len(re.findall('\{}+'.format(punc), tokens__no_tags))
+        count += len(re.findall(r'{}+'.format(punc), tokens_no_tags))
     return count
+
+RELATION_NAME = 'twit_classification'
+
+FEATURES = ['1st_person_pro', '2nd_person_pro', '3rd_person_pro',
+            'conjunctions', 'past', 'future', 'commas', '(semi)colons',
+            'dashes', 'parentheses', 'ellipses', 'common_nouns',
+            'proper_nouns', 'adverbs', 'wh_words', 'slang', 'uppercase',
+            'avg_sentence_len', 'avg_token_len', 'num_sentences']
+
+FEATURE_FUNCS = {'1st_person_pro': partial(count_pronoun, 'First'),
+                 '2nd_person_pro': partial(count_pronoun, 'Second'),
+                 '3rd_person_pro': partial(count_pronoun, 'Third'),
+                 'conjunctions': count_conjunctions,
+                 'past': partial(count_verbs, 'past'),
+                 'future': partial(count_verbs, 'future'),
+                 'commas': partial(count_punctuation, ','),
+                 '(semi)colons': partial(count_punctuation, ':|;'),
+                 'dashes': partial(count_punctuation, '-'),
+                 'parentheses': partial(count_punctuation, '(|)'),
+                 'ellipses': partial(count_punctuation, '...'),
+                 'common_nouns': count_c_nouns,
+                 'proper_nouns': count_p_nouns,
+                 'adverbs': count_adverbs,
+                 'wh_words': count_wh_words,
+                 'slang': count_slang,
+                 'uppercase': count_uppercase,
+                 'avg_sentence_len': avg_sentence_length,
+                 'avg_token_len': avg_token_length,
+                 'num_sentences': count_sentences}
+
+PAST_TAGS = "(/PRP\$?|/VBD|/VBG|/VBN)"
+FUTURE_TAGS = "(/PRP\$|/VB|/VBP|/VBZ|/MD)"
+PAST_FIXES = "(has|had|have|were|was|did)?"
+FUTURE_FIXES = "('nt|'ll|will|won't|gonna|going\sto)?"
+PAST_REGEX = PAST_FIXES + PAST_TAGS + '\s?[a-z]*' + PAST_TAGS
+FUTURE_REGEX = FUTURE_FIXES + FUTURE_TAGS + '\s?[a-z]*' + FUTURE_TAGS
+
+VERB_TENSE_REGEX = {'past': PAST_REGEX, 'future': FUTURE_REGEX}
+
+WORDLISTS_DIR = '/u/cs401/Wordlists'
 
 if __name__ == "__main__":
     args = sys.argv
@@ -327,3 +385,6 @@ if __name__ == "__main__":
         max_per_class = -1
 
     data = load_tweets(input_file_name, max_per_class)
+    with open(output_file_name, 'w+') as f:
+        init_arff(f)
+        all_data_to_arff(f, data)
