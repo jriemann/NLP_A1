@@ -98,14 +98,16 @@ def sentence_to_tags(sentence):
     Return a list of tags corresponding to the tagged tokens
     in sentence.
     '''
-    return map(lambda s: s.split('/')[1], sentence.split(' '))
+    split_tags = map(lambda s: s.split('/')[1], sentence.split(' '))
+    return filter(None, split_tags)
 
 def sentence_to_tokens(sentence):
     '''
     Return a list of tokens corresponding to the tagged tokens
     in sentence.
     '''
-    return map(lambda s: s.split('/')[0], sentence.split(' '))
+    split_tokens = map(lambda s: s.split('/')[0], sentence.split(' '))
+    return filter(None, split_tokens)
 
 def count_sentences(tweet):
     '''
@@ -135,8 +137,8 @@ def avg_sentence_length(tweet):
     num_sentences = count_sentences(tweet)
     total = 0
     for sentence in as_sentences(tweet):
-        tagged_tokens = sentence.split()
-        total += len(tagged_tokens)
+        tokens = sentence_to_tokens(sentence)
+        total += len(tokens)
     return total / num_sentences
 
 def tag_counts(tweet):
@@ -163,7 +165,7 @@ def count_pronoun(tweet, nth_person):
     Return the number of occurences in tweet of nth_person
     pronouns.
     '''
-    f = open(WORDLISTS_DIR + '/{}-person'.format(nth_person))
+    f = open(WORDLISTS_DIR + '/{}-person'.format(nth_person), 'r')
     pronouns = [s.rstrip('\n') for s in f.readlines()]
     f.close()
     count = 0
@@ -230,7 +232,15 @@ def count_slang(tweet):
     '''
     Return the number of occurences in tweet of slang words.
     '''
-    pass
+    count = 0
+    f = open(WORDLISTS_DIR + '/Slang', 'r')
+    slang_words = [s.rstrip('\n') for s in f.readlines()]
+    f.close()
+    for sentence in as_sentences(tweet):
+        tokens = sentence_to_tokens(sentence)
+        token_to_slang = map(lambda s: 1 if s in slang_words else 0, tokens)
+        count += sum(token_to_slang)
+    return count
 
 def count_uppercase(tweet): 
     '''
@@ -251,6 +261,7 @@ def count_punctuation(tweet):
         )    (left parenthesis)
         ...  (ellipses)
     '''
+    punctuation = [',', ':', ';', '-', '(', ')', '...']
     pass
 
 if __name__ == "__main__":
@@ -264,5 +275,3 @@ if __name__ == "__main__":
         max_per_class = -1
 
     data = load_tweets(input_file_name, max_per_class)
-    for d in data:
-        print count_pronouns(d)
