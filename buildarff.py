@@ -1,7 +1,16 @@
 import sys
+import re
 
-CLASSES = ['0', '2', '4']
+CLASSES = ['0', '4']
 WORDLISTS_DIR = '/u/cs401/Wordlists'
+
+def is_demarcation(s):
+    '''
+    Return True iff s is a tweet demarcation of the form
+    <A=#>, where # is the class of that tweet.
+    '''
+    c = ''.join(CLASSES)
+    return True if re.match('<A=[{}]>'.format(c), s) else False
 
 def load_tweet_data(input_file_name, max_per_class):
     '''
@@ -12,11 +21,12 @@ def load_tweet_data(input_file_name, max_per_class):
     '''
     pass
 
-def num_sentences(tweet):
+def count_sentences(tweet):
     '''
     Return the number of sentences in tweet.
     '''
-    pass
+    no_demarcation = tweet.split('\n')[1:]
+    return len(no_demarcation)
 
 def avg_token_length(tweet):
     '''
