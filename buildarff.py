@@ -4,29 +4,41 @@ import re
 CLASSES = ['0', '4']
 WORDLISTS_DIR = '/u/cs401/Wordlists'
 
-def is_demarcation(s):
-    '''
-    Return True iff s is a tweet demarcation of the form
-    <A=#>, where # is the class of that tweet.
-    '''
-    c = ''.join(CLASSES)
-    return True if re.match('<A=[{}]>'.format(c), s) else False
-
-def load_tweet_data(input_file_name, max_per_class):
+def load_tweets(input_file_name, max_per_class):
     '''
     Return a list of at most max_per_class normalized tweets
     for every class in CLASSES, all of which are stored in
-    the file input_file_name.
+    the file named input_file_name.
     If max_per_class is -1, return all tweets for each class in CLASSES.
     '''
-    pass
+    if max_per_class == -1:
+        data = load_all_tweets(input_file_name)
+
+    return data
+
+def load_all_tweets(input_file_name):
+    '''
+    Return every normalized tweet stored in the file
+    input_file_name in a list.
+    '''
+    data = []
+    f = open(input_file_name, 'r')
+    lines = f.readlines()
+    curr = lines[0]
+    for line in lines[1:]:
+        if is_demarcation(line.rstrip('\n')):
+            data += [curr]
+            curr = line
+        else:
+            curr += line
+    data += [curr]
+    return data
 
 def count_sentences(tweet):
     '''
     Return the number of sentences in tweet.
     '''
-    no_demarcation = tweet.split('\n')[1:]
-    return len(no_demarcation)
+    return len(tweet.split('\n')) - 2
 
 def avg_token_length(tweet):
     '''
@@ -117,6 +129,13 @@ def count_punctuation(tweet):
     '''
     pass
 
+def is_demarcation(s):
+    '''
+    Return True iff s is a tweet demarcation of the form
+    <A=#>, where # is the class of that tweet.
+    '''
+    c = ''.join(CLASSES)
+    return True if re.match('<A=[{}]>'.format(c), s) else False
 
 if __name__ == "__main__":
     args = sys.argv
@@ -127,3 +146,7 @@ if __name__ == "__main__":
         max_per_class = int(args[3])
     else:
         max_per_class = -1
+
+    data = load_tweets('very_small_test.twt', -1)
+    for d in data:
+        print count_sentences(d)
