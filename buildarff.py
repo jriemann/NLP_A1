@@ -1,7 +1,7 @@
 import sys
 
 CLASSES = ['0', '2', '4']
-
+WORDLISTS_DIR = '/u/cs401/Wordlists'
 
 def load_tweet_data(input_file_name, max_per_class):
     '''

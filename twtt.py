@@ -9,8 +9,7 @@ import HTMLParser
 import io
 
 # WARNING: Change this before submitting.
-INPUT_FILE = 'testdata.manual.2009.06.14.csv'
-ABBR_FILE = 'abbrev.english'
+ABBR_FILE = '/u/cs401/Wordlists/abbrev.english'
 TAGGER = NLPlib.NLPlib()
 
 CLASSES = [0, 4]
