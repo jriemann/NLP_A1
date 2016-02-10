@@ -278,8 +278,8 @@ if __name__ == "__main__":
     args = sys.argv
     argc = len(args)
     input_file_name = args[1]
-    open_input_file = open(input_file_name, 'r')
-    reader = list(csv.reader(open_input_file, delimiter=','))
+    f_in = open(input_file_name, 'r')
+    reader = list(csv.reader(f_in, delimiter=','))
 
     if argc == 4:
         gid = int(args[2])
@@ -289,5 +289,8 @@ if __name__ == "__main__":
         output_file_name = args[2]
         data = reader
 
-    open_output_file = open(output_file_name, 'w+')
-    main(data, open_output_file)
+    f_out = open(output_file_name, 'w+')
+    main(data, f_out)
+    
+    f_in.close()
+    f_out.close()
