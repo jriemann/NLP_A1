@@ -331,7 +331,7 @@ def count_punctuation(punc, tweet):
     count = 0
     for sentence in as_sentences(tweet):
         tokens_no_tags = sentence_no_tags(sentence) 
-        count += len(re.findall(r'{}+'.format(punc), tokens_no_tags))
+        count += len(re.findall('{}+'.format(punc), tokens_no_tags))
     return count
 
 RELATION_NAME = 'twit_classification'
@@ -349,10 +349,10 @@ FEATURE_FUNCS = {'1st_person_pro': partial(count_pronoun, 'First'),
                  'past': partial(count_verbs, 'past'),
                  'future': partial(count_verbs, 'future'),
                  'commas': partial(count_punctuation, ','),
-                 '(semi)colons': partial(count_punctuation, ':|;'),
+                 '(semi)colons': partial(count_punctuation, '(:|;)'),
                  'dashes': partial(count_punctuation, '-'),
-                 'parentheses': partial(count_punctuation, '(|)'),
-                 'ellipses': partial(count_punctuation, '...'),
+                 'parentheses': partial(count_punctuation, '(\(|\))'),
+                 'ellipses': partial(count_punctuation, '(\.\.\.)'),
                  'common_nouns': count_c_nouns,
                  'proper_nouns': count_p_nouns,
                  'adverbs': count_adverbs,
