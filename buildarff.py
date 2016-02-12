@@ -334,7 +334,34 @@ def count_punctuation(punc, tweet):
         count += len(re.findall('{}+'.format(punc), tokens_no_tags))
     return count
 
+
 RELATION_NAME = 'twit_classification'
+
+######################## EXTENDING FEATURES ##############################
+#
+# If we ever want to extract a new feature, we need only carry out
+# three steps:
+#
+#       1. Write a function that returns a numeric value
+#          representing the value of that feature. The signature of
+#          the function must be of the format
+#               def <feature_function>(*args, tweet)
+#          where *args is a sequence of optional arguments (0 or more)
+#          and tweet is the input tweet in .twtt format.
+#
+#       2. Add the name of the feature to the global list FEATURES.
+#
+#       3. Add a mapping to the global dictionary FEATURE_FUNCS that is
+#          of the form
+#               <feature_name>: <feature_function>
+#          If the function calculates the feature value in the same way
+#          for related features, the mapping will be of the form
+#            <feature_name>: partial(<feature_function>, *args)
+#          which is a partial function application depending on the
+#          specific sub-feature. Note that for multiple optional arguments,
+#          we must apply partial as many times as there are arguments.
+#
+##########################################################################
 
 FEATURES = ['1st_person_pro', '2nd_person_pro', '3rd_person_pro',
             'conjunctions', 'past', 'future', 'commas', '(semi)colons',
