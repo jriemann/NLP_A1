@@ -369,37 +369,37 @@ FEATURES = ['1st_person_pro', '2nd_person_pro', '3rd_person_pro',
             'proper_nouns', 'adverbs', 'wh_words', 'slang', 'uppercase',
             'avg_sentence_len', 'avg_token_len', 'num_sentences']
 
-FEATURE_FUNCS = {'1st_person_pro': partial(count_pronoun, 'First'),
-                 '2nd_person_pro': partial(count_pronoun, 'Second'),
-                 '3rd_person_pro': partial(count_pronoun, 'Third'),
-                 'conjunctions': count_conjunctions,
-                 'past': partial(count_verbs, 'past'),
-                 'future': partial(count_verbs, 'future'),
-                 'commas': partial(count_punctuation, ','),
-                 '(semi)colons': partial(count_punctuation, '(:|;)'),
-                 'dashes': partial(count_punctuation, '-'),
-                 'parentheses': partial(count_punctuation, '(\(|\))'),
-                 'ellipses': partial(count_punctuation, '(\.\.\.)'),
-                 'common_nouns': count_c_nouns,
-                 'proper_nouns': count_p_nouns,
-                 'adverbs': count_adverbs,
-                 'wh_words': count_wh_words,
-                 'slang': count_slang,
-                 'uppercase': count_uppercase,
-                 'avg_sentence_len': avg_sentence_length,
-                 'avg_token_len': avg_token_length,
-                 'num_sentences': count_sentences}
+FEATURE_FUNCS = {'1st_person_pro'   : partial(count_pronoun, 'First'),
+                 '2nd_person_pro'   : partial(count_pronoun, 'Second'),
+                 '3rd_person_pro'   : partial(count_pronoun, 'Third'),
+                 'conjunctions'     : count_conjunctions,
+                 'past'             : partial(count_verbs, 'past'),
+                 'future'           : partial(count_verbs, 'future'),
+                 'commas'           : partial(count_punctuation, ','),
+                 '(semi)colons'     : partial(count_punctuation, '(:|;)'),
+                 'dashes'           : partial(count_punctuation, '-'),
+                 'parentheses'      : partial(count_punctuation, '(\(|\))'),
+                 'ellipses'         : partial(count_punctuation, '(\.\.\.)'),
+                 'common_nouns'     : count_c_nouns,
+                 'proper_nouns'     : count_p_nouns,
+                 'adverbs'          : count_adverbs,
+                 'wh_words'         : count_wh_words,
+                 'slang'            : count_slang,
+                 'uppercase'        : count_uppercase,
+                 'avg_sentence_len' : avg_sentence_length,
+                 'avg_token_len'    : avg_token_length,
+                 'num_sentences'    : count_sentences}
 
-PAST_TAGS = "(/PRP\$?|/VBD|/VBG|/VBN)"
-FUTURE_TAGS = "(/PRP\$|/VB|/VBP|/VBZ|/MD)"
-PAST_FIXES = "(has|had|have|were|was|did)?"
-FUTURE_FIXES = "('nt|'ll|will|won't|gonna|going\sto)?"
-PAST_REGEX = PAST_FIXES + PAST_TAGS + '\s?[a-z]*' + PAST_TAGS
-FUTURE_REGEX = FUTURE_FIXES + FUTURE_TAGS + '\s?[a-z]*' + FUTURE_TAGS
+PAST_TAGS        = "(/PRP\$?|/VBD|/VBG|/VBN)"
+FUTURE_TAGS      = "(/PRP\$|/VB|/VBP|/VBZ|/MD)"
+PAST_FIXES       = "(has|had|have|were|was|did)?"
+FUTURE_FIXES     = "('nt|'ll|will|won't|gonna|going\sto)?"
+PAST_REGEX       = PAST_FIXES + PAST_TAGS + '\s?[a-z]*' + PAST_TAGS
+FUTURE_REGEX     = FUTURE_FIXES + FUTURE_TAGS + '\s?[a-z]*' + FUTURE_TAGS
 
 VERB_TENSE_REGEX = {'past': PAST_REGEX, 'future': FUTURE_REGEX}
 
-WORDLISTS_DIR = '/u/cs401/Wordlists'
+WORDLISTS_DIR    = '/u/cs401/Wordlists'
 
 if __name__ == "__main__":
     args = sys.argv
