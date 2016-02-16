@@ -1,0 +1,29 @@
+
+The following data was generated using the Support Vector Machine classifier.
+
+--------------------------------------------------------------------
+| Number of Samples per Class  |  % of Test Set Correctly Classified 
+--------------------------------------------------------------------
+|    500                                              52.6462 %    |
+|   1000                                              54.5961 %    |
+|   1500                                              54.039  %    |
+|   2000                                              54.8747 %    |
+|   2500                                              54.039  %    |
+|   3000                                              53.4819 %    |
+|   3500                                              53.7604 %    |
+|   4000                                              54.3175 %    |
+|   4500                                              53.2033 %    |
+|   5000                                              53.4819 %    |
+|   5500                                              52.9248 %    |
+--------------------------------------------------------------------
+
+Here we can see that the best classification rate was achieved when
+using 2000 samples of each class. As we increase the number of 
+samples, accuracy tends to decrease. A notable exception is for 
+4000 samples, where we observe a classification rate of 54.3175, 
+the third best result from our testing. This may or may not be
+explained by random sampling noise.
+
+The general decrease in accuracy can potentially be explained by the classifier 
+overfitting to the training data. As we train on more data points, 
+we lose the capacity to generalize well on unseen data. 
