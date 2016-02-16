@@ -265,7 +265,7 @@ def partition_by_class(reader, gid, n):
     data = []
     for cls in CLASSES:
         lower_i = CLASS_INDICES[cls] + (gid * num_per_class)
-        upper_i = CLASS_INDICES[cls] + ((gid + 1) * num_per_class - 1)
+        upper_i = CLASS_INDICES[cls] + ((gid + 1) * num_per_class)
         data += reader[lower_i:upper_i]
     return data
 
